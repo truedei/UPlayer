@@ -15,9 +15,5 @@
         <file>Image/play_volume_low.png</file>
         <file>Image/dir.png</file>
         <file>Image/theme.png</file>
-        <file>skin/1.png</file>
-        <file>skin/2.png</file>
-        <file>skin/3.png</file>
-        <file>skin/4.png</file>
     </qresource>
 </RCC>

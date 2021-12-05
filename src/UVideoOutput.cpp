@@ -9,11 +9,6 @@ UVideoOutput::UVideoOutput(QQuickItem *parent)
     qDebug()<<__FUNCTION__;
 
 
-    /*开启一个线程*/
-//    myThread = new MyThread();
-//    qDebug()<<"主线程id："<<QThread::currentThreadId();
-//    myThread->setIsStop(false);
-
     uPlayer = new UPlayer();
 
     update();
