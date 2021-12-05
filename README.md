@@ -9,6 +9,7 @@ github:https://github.com/truedei/UPlayer
 
 
 初始界面：
+
 ![1](./doc/images/1.jpg)
 
 
