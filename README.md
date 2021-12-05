@@ -1,6 +1,8 @@
 # UPlayer
 Video player
 
+github:https://github.com/truedei/UPlayer
+
 
 
 # 展示
