@@ -3,7 +3,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Dialogs 1.2
-import cn.truedei.UPlayer.UPlayer 1.0
+import cn.truedei.UPlayer 1.0
 
 
 Window {
@@ -18,6 +18,8 @@ Window {
     color: "black"
     onTitleChanged: rootWindowToolBarTitleText.text = title
 
+
+
     //全局变量
     property bool isMoveWindow: false
     property point rootWindowTitleMousePos: Qt.point(x,y)
@@ -29,62 +31,27 @@ Window {
     property int toolBarCloseW: 30
 
 
-    UPlayer{
-        id:uPlayer
+    Settings{
+        id:settings
+
+        //更新文件选择框的状态，是隐藏，还是显示
+        onUpdateVideoFileDialogStatus:{
+            console.log("onUpdateVideoFileDialogStatus onUpdateVideoFileDialogStatus onUpdateVideoFileDialogStatus ");
+
+            rectangle.visible = settings.getVideoFileDialogStatus() === 0 ? true :  false;
+
+            console.log("getVideoFileDialogStatus="+settings.getVideoFileDialogStatus());
+        }
+
     }
 
-
-    //背景
-//    Image {
-//        id: rootImage
-//        objectName: rootImage
-//        anchors.topMargin: 46
-//        anchors.bottomMargin: 74
-//        anchors.fill: parent
-//        clip: false
-//        Layout.fillHeight: true
-//        Layout.fillWidth: true
-//        Layout.maximumWidth: rootWindow.width
-//        Layout.maximumHeight: rootWindow.height
-//        fillMode: Image.PreserveAspectFit
-//        source: !uPlayer.getStrBackgroundPath() ? "" : uPlayer.getStrBackgroundPath()
-//        visible: true
-//        cache: false
-//     }
-
-
-//    CircleHead {     // 接着我们就可以使用"PieChart"这个类型
-//        id: aPieChart
-////        x: 120
-////        y: 120
-//        anchors.centerIn: parent
-//        width: 300
-//        height: 300
-//        anchors.topMargin: 100
-//        anchors.bottomMargin: 100
-//        anchors.fill: parent
-////        source: ":/images/cat.jpg"
-//        source: !uPlayer.getStrBackgroundPath() ? "" : uPlayer.getStrBackgroundPath()
-//    }
-
-
-//    MYVideoOutput {
-//        id: videooutput
-//        anchors.fill: parent
-//        anchors.topMargin: 46
-//        anchors.bottomMargin: 74
-//        Layout.fillHeight: true
-//        Layout.fillWidth: true
-//        Layout.maximumWidth: rootWindow.width
-//        Layout.maximumHeight: rootWindow.height
-//        visible: true
-//    }
 
     UVideoOutput
     {
         id: uVideoOutput
         width: parent.width
         height: parent.height
+        visible: true
         mWidth: parent.width
         mHeight: parent.height
         anchors.topMargin: 46
@@ -96,8 +63,26 @@ Window {
         Layout.maximumWidth: rootWindow.width
         Layout.maximumHeight: rootWindow.height
 //        fileUrl: ":/Image/image.jpg"
-        fileUrl: !uPlayer.getStrBackgroundPath() ? "" : uPlayer.getStrBackgroundPath()
+        fileUrl: !settings.getStrBackgroundPath() ? "" : settings.getStrBackgroundPath()
+
+
+        //更新总时间
+        onUpdatePlayTotalTime:{
+            console.log("onUpdatePlayTotalTime~~~ \n");
+            console.log(uVideoOutput.getPlayTotalTime());
+            console.log(uVideoOutput.playTotalTime);
+
+            totalTime.text = uVideoOutput.playTotalTime;
+        }
+
+        //更新正在播放的时间
+        onUpdatePlayCurrTime:{
+            console.log("onUpdatePlayCurrTime~~~ playCurrTime=\n"+uVideoOutput.playCurrTime);
+//            currTime.text = uVideoOutput.getPlayCurrTime();
+            currTime.text = uVideoOutput.playCurrTime;
+        }
     }
+
     property double zoomVlaue: 1.0
     signal drawImage()
 
@@ -336,7 +321,7 @@ Window {
         Slider {
             id: slider
             x: 8
-            y: 5
+            y: 8
             from: 1
             value: 25
             to: 100
@@ -357,11 +342,11 @@ Window {
 
             //时间
             Text {
-                id: element3
+                id: currTime
                 x: -168
-                y: 7
+                y: -2
                 color: "#12e47b"
-                text: qsTr("00:01:34")
+                text: qsTr("00:00:00")
                 font.pixelSize: 12
                 Layout.maximumHeight: 10
                 Layout.maximumWidth: 200
@@ -370,7 +355,7 @@ Window {
             Text {
                 id: element4
                 x: -114
-                y: 7
+                y: -2
                 width: 30
                 height: 12
                 color: "#f2f1f1"
@@ -381,11 +366,11 @@ Window {
             }
 
             Text {
-                    id: element5
+                    id:  totalTime
                     x: -103
-                    y: 7
+                    y: -2
                     color: "#f9f9f9"
-                    text: qsTr("00:01:34")
+                    text: qsTr("00:00:00")
                     font.pixelSize: 12
                     Layout.maximumHeight: 10
                     Layout.maximumWidth: 200
@@ -438,10 +423,11 @@ Window {
                     //1、关闭正在播放的视频
 
                     //2、显示选择视频文件的提示
-                    rectangle.visible = true
+//                    rectangle.visible = true
 
-                    uVideoOutput.StopPlay();
+                    uVideoOutput.stopPlay();
 
+                    settings.setVideoFileDialogStatus(0);
 
                 }
             }
@@ -500,7 +486,10 @@ Window {
                 onClicked: {
                     console.log("开始播放")
 
-                    uVideoOutput.StartPlay();
+                    uVideoOutput.startPlay();
+
+                    settings.setVideoFileDialogStatus(settings.getVideoFileDialogStatus() == 1 ? 0 : 1);
+
                 }
             }
 
@@ -633,6 +622,7 @@ Window {
         height: 87
         color: "#333232"
         border.color: "#00000000"
+//        visible: settings.getRectangleStatus() === 0 ? true :  false
 
 
         MouseArea {
@@ -644,6 +634,7 @@ Window {
             }
             onExited: { //监听鼠标移出
                  mouseEnter(false);
+
             }
             onClicked: {
                 console.log("打开选择爱啦啦阿拉啦！")
@@ -692,9 +683,11 @@ Window {
             console.log("You chose: " + chooseVideo.fileUrl.toString().substring(7,chooseVideo.fileUrl.length));
 
             //隐藏选择视频文件的提示
-            rectangle.visible = false;
+//            rectangle.visible = false;
 
-//            uPlayer.urlPass(chooseVideo.fileUrl.toString().substring(7,chooseVideo.fileUrl.length));
+            settings.setVideoFileDialogStatus(1);
+
+//            settings.urlPass(chooseVideo.fileUrl.toString().substring(7,chooseVideo.fileUrl.length));
             uVideoOutput.urlPass(chooseVideo.fileUrl.toString().substring(7,chooseVideo.fileUrl.length));
 
         }
@@ -723,8 +716,8 @@ Window {
 //            rootImage.source= "file:///"+chooseTheme.fileUrl.toString().substring(8,chooseTheme.fileUrl.length)
 
             //保存到配置文件
-//            uPlayer.updateBackgroupImage(chooseTheme.fileUrl);
-//            uPlayer.updateBackgroupImage(chooseTheme.fileUrl.toString().substring(7,chooseTheme.fileUrl.length));
+//            settings.updateBackgroupImage(chooseTheme.fileUrl);
+//            settings.updateBackgroupImage(chooseTheme.fileUrl.toString().substring(7,chooseTheme.fileUrl.length));
             uVideoOutput.updateBackgroupImage(chooseTheme.fileUrl.toString().substring(7,chooseTheme.fileUrl.length));
 
 //            rootImage.source= "file:///C:/Users/Administrator/Pictures/Camera Roll/mv.jpg"
@@ -739,6 +732,16 @@ Window {
 
 
     //下部区域，开始、暂停，快进，快退，声音大小，进度条等。
+
+    function updateRectangleStatus()
+    {
+        rectangle.visible = settings.getRectangleStatus() == 0 ? true : false;
+    }
+
+    Component.onCompleted: {
+//        Player.updateRectangleStatus.connect(totalTime);
+    }
+
 
 
 

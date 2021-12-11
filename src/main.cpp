@@ -4,7 +4,7 @@
 #include <QQuickWindow>
 #include <QFontDatabase>
 
-#include "UPlayer.h"
+#include "Settings.h"
 #include <QTextCodec>
 #include <QQmlContext>
 
@@ -44,10 +44,11 @@ int main(int argc, char *argv[])
 
 
     //注册
-    qmlRegisterType<UPlayer>("cn.truedei.UPlayer.UPlayer", 1, 0, "UPlayer");
-    qmlRegisterType<UVideoOutput>("cn.truedei.UPlayer.UPlayer", 1, 0, "UVideoOutput");
+    qmlRegisterType<Settings>("cn.truedei.UPlayer", 1, 0, "Settings");
+    qmlRegisterType<UVideoOutput>("cn.truedei.UPlayer", 1, 0, "UVideoOutput");
 
     QQmlApplicationEngine engine;
+
 
 
 

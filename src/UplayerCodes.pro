@@ -13,7 +13,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        UPlayer.cpp \
+        Settings.cpp \
         UVideoOutput.cpp \
         main.cpp
 
@@ -35,7 +35,7 @@ DISTFILES += \
     Image/u_player_logo.ico
 
 HEADERS += \
-    UPlayer.h \
+    Settings.h \
     UVideoOutput.h \
     main.h
 

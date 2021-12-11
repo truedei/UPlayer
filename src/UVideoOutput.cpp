@@ -2,6 +2,14 @@
 #include <QPainter>
 #include <QImage>
 
+#include <ctime>
+
+//是否播放 | 暂停
+//true:播放,flase:暂停
+static bool isPlay = true;
+//是否退出
+static bool isExit = false;
+
 UVideoOutput::UVideoOutput(QQuickItem *parent)
     :QQuickPaintedItem(parent)
     ,mWidth(0), mHeight(0),mZoom(1.0f)
@@ -9,7 +17,9 @@ UVideoOutput::UVideoOutput(QQuickItem *parent)
     qDebug()<<__FUNCTION__;
 
 
-    uPlayer = new UPlayer();
+    settings = new Settings();
+
+    params = new Params();
 
     update();
 
@@ -44,6 +54,26 @@ void Delay2(int msec)
     QTime dieTime = QTime::currentTime().addMSecs(msec);
     while( QTime::currentTime() < dieTime )
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+/**
+ * @brief buildTime
+ * @param totalTimeSecond 秒
+ * @return 00:00:00 返回格式时:分:秒
+ */
+QString buildTime(int second)
+{
+
+    char timeStr[100]={0};
+
+    sprintf(timeStr,"%02d:%02d:%02d",second/3600,second%3600/60,second%60);
+    qDebug() << timeStr;
+
+    QString totalTimeStr = timeStr;
+
+    qDebug() << totalTimeStr;
+
+    return totalTimeStr;
 }
 
 int UVideoOutput::playVideo2(const char *filepath,UVideoOutput *uVideoOutput)
@@ -162,45 +192,131 @@ int UVideoOutput::playVideo2(const char *filepath,UVideoOutput *uVideoOutput)
                                      NULL, NULL, NULL);
 
 
-    //av_read_frame读取一帧未解码的数据
-    while (av_read_frame(pFormatCtx, packet) >= 0 && uVideoOutput->status == 1){
-       //如果是视频数据
-       if (packet->stream_index == videoindex){
-           //解码一帧视频数据
-           ret = avcodec_send_packet(pCtx, packet);
 
+    int status = 0;
 
-           if (ret < 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-              qDebug() << "avcodec_send_packet: " << ret ;
-              break;
-           }
-
-           //int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame);
-           while (avcodec_receive_frame(pCtx, pFrame) == 0) {
-               //获取到 m_Frame 解码数据，在这里进行格式转换，然后进行渲染，下一节介绍 ANativeWindow 渲染过程
-//              qDebug() << "height:" << pFrame->height << " ; width:"<< pFrame->width << ";data=" <<  pFrame->data ;
-
-              sws_scale(img_convert_ctx, (const unsigned char* const*)pFrame->data, pFrame->linesize, 0, pCtx->height,
-                  pFrameRGB->data, pFrameRGB->linesize);
-
-              QImage img((uchar*)pFrameRGB->data[0],pCtx->width,pCtx->height,QImage::Format_RGB32);
-
-
-                //保存视频帧为图片
-//              img.save("/home/zhenghui/桌面/aaa/a.png");
-
-              //播放每一帧视频
-              uVideoOutput->setImage(img);
-
-              Delay2(10);
-
-             qDebug() << "img height:" << pCtx->height << " ; img width:"<< pCtx->width;
-
-           }
-
-       }
-       av_packet_unref(packet);
+    //播放总时间
+    int totalTimeSecond = 0;
+    if(pFormatCtx->duration != AV_NOPTS_VALUE)
+    {
+        //微妙/1000000 = 秒
+        totalTimeSecond = pFormatCtx->duration / 1000000;
     }
+
+    qDebug() << "totalTimeSecond:" << totalTimeSecond  << "秒";
+
+    //将秒，转换为00:00:00格式
+    QString totalTimeStr = buildTime(totalTimeSecond);
+    QString currTimeStr = "";
+
+
+    qDebug() << "totalTimeStr:" << totalTimeStr;
+
+    uVideoOutput->setPlayTotalTime(totalTimeStr);
+
+
+    //开始时间
+
+    clock_t start,end;
+
+
+    start = clock();
+
+    int count=0;
+    //如果线程没有退出就一直执行
+    while(!isExit)
+    {
+
+//         if(isExit) goto end;
+
+        //是否暂停
+        //暂停播放
+        if(isPlay == false)
+        {
+
+            qDebug() << "暂停播放了 " << endl;
+            //休眠
+            Delay2(100);
+            continue;
+        }else{
+             qDebug() << "正在播放   ~~~ isPlay=" << isPlay << endl;
+
+#if 1
+        while((status=av_read_frame(pFormatCtx, packet)) >= 0  && isPlay)
+        {
+
+             if(isExit) goto end;
+
+
+            //如果是视频数据
+            if (packet->stream_index == videoindex){
+
+
+                //解码一帧视频数据
+                ret = avcodec_send_packet(pCtx, packet);
+
+                if (ret < 0 || ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                   qDebug() << "avcodec_send_packet: " << ret ;
+                   break;
+                }
+
+                //int avcodec_receive_frame(AVCodecContext *avctx, AVFrame *frame);
+                while ((ret = avcodec_receive_frame(pCtx, pFrame)) == 0 && isPlay) {
+
+                     if(isExit) goto end;
+
+
+                    //获取到 m_Frame 解码数据，在这里进行格式转换，然后进行渲染
+                   sws_scale(img_convert_ctx, (const unsigned char* const*)pFrame->data, pFrame->linesize, 0, pCtx->height,
+                       pFrameRGB->data, pFrameRGB->linesize);
+
+                   QImage img((uchar*)pFrameRGB->data[0],pCtx->width,pCtx->height,QImage::Format_RGB32);
+
+
+                     //保存视频帧为图片
+     //              img.save("/home/zhenghui/桌面/aaa/a.png");
+
+                   //播放每一帧视频
+                   uVideoOutput->setImage(img);
+
+
+
+                 // qDebug() << "img height:" << pCtx->height << " ; img width:"<< pCtx->width;
+
+                    end=clock();		//程序结束用时
+
+                   int endtime=(int)(end-start)/CLOCKS_PER_SEC;
+
+//                   currTimeStr.setNum(endtime);
+
+                   currTimeStr = buildTime(endtime);
+                   uVideoOutput->setPlayCurrTime(currTimeStr);
+                   count++;
+
+                   Delay2(25);
+
+                }
+
+            }
+            av_packet_unref(packet);
+
+        }
+
+        //读不到就退出
+        qDebug() << "status=" << status << endl;
+        if(status < 0)
+        {
+           goto end;
+        }
+
+
+
+#endif
+
+        }
+
+    }
+
 
 end:
     if(img_convert_ctx != NULL)
@@ -229,25 +345,29 @@ end:
     }
 
 
+    //恢复背景
+//    uVideoOutput->status = 0;
+//    emit uVideoOutput->update();
+
+
+    qDebug() <<__FUNCTION__ <<"---> Exit" << endl;
+
     return ret;
 }
+
 
 // 定义线程的 id 变量，多个变量使用数组
 pthread_t recId;
 
 
-struct Params
-{
-//    char * fileName;//参数1
-    QString url;
-    UVideoOutput *uVideoOutput;
-};
+
 
 void* UVideoOutput::playVideoTh(void* args){
 
     Params *param =  (Params*)args;
 
     qDebug() << "playVideo=====--->"<< param->url<<endl;
+
     UVideoOutput *uVideoOutput = param->uVideoOutput;
 
     playVideo2(param->url.toStdString().data(),uVideoOutput);
@@ -258,15 +378,26 @@ void* UVideoOutput::playVideoTh(void* args){
 
 void UVideoOutput::urlPass(QString url)
 {
+//    *(this->isPlay) = true;
+
+    settings->setVideoFileDialogStatus(1);
+
+    //开始播放
+    isPlay = true;
+    isExit = false;
 
 
     status = 1;
     qDebug() << "start video :" << url ;
 
 
-    Params *param = new Params();
-    param->url =url;
-    param->uVideoOutput = this;
+//    Params *param = new Params();
+//    param->url =url;
+//    param->uVideoOutput = this;
+
+    params->url =url;
+    params->uVideoOutput = this;
+
 
     qDebug() << "start video :" << url ;
 
@@ -275,11 +406,12 @@ void UVideoOutput::urlPass(QString url)
     qDebug() << (url == nullptr) ;
 
     //如果没录制就启动线程
-    qDebug() << "start video121 :" << param->url ;
+//    qDebug() << "start video121 :" << param->url ;
+    qDebug() << "start video121 :" << params->url ;
 
     UVideoOutput XIV;
 
-    int ret = pthread_create(&recId, NULL,playVideoTh, param);
+    int ret = pthread_create(&recId, NULL,playVideoTh, params);
     if (ret != 0)
     {
         qDebug() << "pthread_create error: error_code=" << ret ;
@@ -287,15 +419,55 @@ void UVideoOutput::urlPass(QString url)
 
 }
 
-void UVideoOutput::StopPlay()
+void UVideoOutput::stopPlay()
 {
     qDebug() <<__FUNCTION__ << endl;
+
+//    this->status = !this->status;
+    this->status = 0;
+    //停止线程
+    isExit = true;
+    //恢复总时间
+    setPlayTotalTime("00:00:00");
+    //恢复正在播放的时间
+    setPlayCurrTime("00:00:00");
+
+//    pthread_exit(&recId);
+
+    //如果正在播放就停止
+//    if(status == 1 || status == 2)
+//    {
+//        status = 0;//显示背景
+//    }
+
+    //刷新显示
+//    emit requestUpdate();
+
+    zoomDraw(1);
 }
 
-void UVideoOutput::StartPlay()
+void UVideoOutput::startPlay()
 {
 
     qDebug() <<__FUNCTION__ << endl;
+
+//    *params->isPlay = !&params->isPlay;
+    isPlay = !isPlay;
+    isExit = false;
+
+//    *params->isPlay = 1;
+
+//     *(this->isPlay) = !*(this->isPlay);
+
+    qDebug() <<"this->isPlay=" << isPlay << endl;
+
+    //如果正在播放就暂停播放
+//    if(status == 1)
+//    {
+//        status = 2;//暂停状态
+//    }
+
+//    settings->setVideoFileDialogStatus(settings->getVideoFileDialogStatus() == 1 ? 0 : 1);
 
 }
 
@@ -355,7 +527,7 @@ QString UVideoOutput::getFileUrl() const
 void UVideoOutput::setFileUrl(QString url)
 {
     fileUrl = url;
-    uPlayer->setStrBackgroundPath(url);
+    settings->setStrBackgroundPath(url);
 }
 
 int UVideoOutput::getWidth() const
@@ -381,4 +553,31 @@ void UVideoOutput::setHeight(int h)
 void UVideoOutput::procUpdate()
 {
     update();
+}
+
+
+const QString &UVideoOutput::getPlayCurrTime() const
+{
+    return playCurrTime;
+}
+
+void UVideoOutput::setPlayCurrTime(const QString &newPlayCurrTime)
+{
+    playCurrTime = newPlayCurrTime;
+
+     emit updatePlayCurrTime();
+}
+
+const QString &UVideoOutput::getPlayTotalTime() const
+{
+    return playTotalTime;
+}
+
+void UVideoOutput::setPlayTotalTime(const QString &newPlayTotalTime)
+{
+    playTotalTime = newPlayTotalTime;
+
+    qDebug() << "666->" << newPlayTotalTime;
+    qDebug() << "777->" << playTotalTime;
+    emit updatePlayTotalTime();
 }

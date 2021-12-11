@@ -1,27 +1,32 @@
-#include "UPlayer.h"
+#include "Settings.h"
 
 
-UPlayer::UPlayer(QObject *parent) : QObject(parent)
+Settings::Settings(QObject *parent) : QObject(parent)
 {
 
 }
 
-UPlayer::~UPlayer(){
+Settings::~Settings(){
 
 }
 
-QObject *UPlayer::getMSource() const
+
+
+int Settings::getVideoFileDialogStatus()
 {
-
-    return m_mSource;
+    return this->videoFileDialogStatus;
 }
 
-void UPlayer::setMSource(QObject *mSource)
+void Settings::setVideoFileDialogStatus(const int status)
 {
-    m_mSource = mSource;
+    this->videoFileDialogStatus = status;
+
+    qDebug() <<__FUNCTION__ <<"啦啦啦啦啦" << endl;
+
+    emit updateVideoFileDialogStatus();
 }
 
-QString UPlayer::getStrBackgroundPath() const
+QString Settings::getStrBackgroundPath() const
 {
     QSettings settingIni(configFileName, QSettings::IniFormat);
 
@@ -30,7 +35,7 @@ QString UPlayer::getStrBackgroundPath() const
     return backGroundpath;
 }
 
-void UPlayer::setStrBackgroundPath(const QString &fileUrl)
+void Settings::setStrBackgroundPath(const QString &fileUrl)
 {
 
     strBackgroundPath = fileUrl;
