@@ -1,0 +1,27 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/Button.qml</file>
+        <file>qml/FileOpen.qml</file>
+        <file>qml/main.qml</file>
+        <file>images/awb4q-fj9ks-002.ico</file>
+        <file>images/dir.png</file>
+        <file>images/image.jpg</file>
+        <file>images/play_fast_forward.png</file>
+        <file>images/play_fast_reverse.png</file>
+        <file>images/play_start.png</file>
+        <file>images/play_stop.png</file>
+        <file>images/play_volume_close.png</file>
+        <file>images/play_volume_high.png</file>
+        <file>images/play_volume_low.png</file>
+        <file>images/theme.png</file>
+        <file>images/u_player_logo.ico</file>
+        <file>images/u_player_logo.png</file>
+        <file>images/window_close.png</file>
+        <file>images/window_max.png</file>
+        <file>images/window_min.png</file>
+        <file>images/icon_Menu.png</file>
+        <file>qml/main2.qml</file>
+        <file>images/play_pause.png</file>
+        <file>qml/CMsgBox.qml</file>
+    </qresource>
+</RCC>
