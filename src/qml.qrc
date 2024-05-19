@@ -1,8 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>qml/Button.qml</file>
-        <file>qml/FileOpen.qml</file>
-        <file>qml/main.qml</file>
         <file>images/awb4q-fj9ks-002.ico</file>
         <file>images/dir.png</file>
         <file>images/image.jpg</file>
@@ -20,8 +17,21 @@
         <file>images/window_max.png</file>
         <file>images/window_min.png</file>
         <file>images/icon_Menu.png</file>
-        <file>qml/main2.qml</file>
         <file>images/play_pause.png</file>
-        <file>qml/CMsgBox.qml</file>
+        <file>qml/mediaplay/MediaPlayMainPage.qml</file>
+        <file>qml/mediaplay/menuBar.qml</file>
+        <file>qml/mediaplay/FileOpen.qml</file>
+        <file>qml/mediaplay/CMsgBox.qml</file>
+        <file>qml/mediaplay/Button.qml</file>
+        <file>qml/MainPage.qml</file>
+        <file>qml/mediaplay/MediaPlayMain.qml</file>
+        <file>qml/record/RecordMain.qml</file>
+        <file>images/snapshot_2.png</file>
+        <file>images/snapshot_1.png</file>
+        <file>images/record_2.png</file>
+        <file>images/record_1.png</file>
+        <file>qml/test.qml</file>
+        <file>qml/record/RecordSettings.qml</file>
+        <file>qml/director/DirectorMain.qml</file>
     </qresource>
 </RCC>
